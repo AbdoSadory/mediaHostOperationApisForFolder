@@ -11,6 +11,7 @@ const app = express()
 app.use(express.json())
 cloudinaryAccess()
 
+// 🟢 api=>  http://localhost:3000/createFolder
 app.post(
   '/createFolder',
   expressAsyncHandler(async (req, res, next) => {
@@ -26,45 +27,26 @@ app.post(
   })
 )
 
+// 🟢 api=> http://localhost:3000/deleteFolder
 app.delete(
   '/deleteFolder',
   expressAsyncHandler(async (req, res, next) => {
     const { folderPath } = req.body
     if (!folderPath) {
+      return next(new Error('Please Send the folder path.', { cause: 400 }))
+    }
+
+    try {
+      const deletedFolders = await cloudinary.api.delete_folder(folderPath)
+      return res.status(200).json({ message: 'Delete Folder', deletedFolders })
+    } catch (err) {
       return next(
-        new Error('Please Send the folder path right. ', { cause: 400 })
+        new Error(
+          `no folder with this name '${folderPath}', please check the folder name and try again`,
+          { cause: 400 }
+        )
       )
     }
-
-    // let subFoldersPaths = []
-    // const subFolders = await cloudinary.api.sub_folders('main')
-    // for (const folder of subFolders['folders']) {
-    //   subFoldersPaths.push(folder['path'])
-    // }
-    // console.log(subFoldersPaths)
-    // for (const subFolderPath of subFoldersPaths) {
-    //   console.log(subFolderPath)
-    //   await cloudinary.api.delete_folder(subFolderPath)
-    // }
-    // cloudinary.api.delete_folder(to_delete[i])
-    try {
-      await cloudinary.api.delete_folder('maidflkn')
-    } catch (err) {
-      return next(new Error('no folder with this name', { cause: 400 }))
-    }
-
-    // console.log(deleteFolder)
-    // if (!Object.keys(deleteFolder).length) {
-    //   return next(
-    //     new Error(
-    //       'no folder has been deleted, please check the folder name and try again',
-    //       { cause: 400 }
-    //     )
-    //   )
-    // }
-    res
-      .status(200)
-      .json({ message: 'Delete Folder', deleteFolder: deleteFolder })
   })
 )
 
